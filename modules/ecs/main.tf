@@ -19,6 +19,7 @@ resource "aws_autoscaling_group" "ecs" {
   min_size         = 1
   max_size         = 3
   desired_capacity = 2
+
   vpc_zone_identifier = var.private_subnets
 
   launch_template {
@@ -28,22 +29,33 @@ resource "aws_autoscaling_group" "ecs" {
 }
 
 resource "aws_ecs_task_definition" "this" {
-  family                   = "nginx"
+  family                   = "nginx-task"
   requires_compatibilities = ["EC2"]
   execution_role_arn       = var.task_execution_role
 
-  container_definitions = jsonencode([{
-    name  = "nginx"
-    image = var.ecr_image
-    portMappings = [{ containerPort = 80 }]
-    secrets = [{
-      name      = "DB_SECRET"
-      valueFrom = var.secret_arn
-    }]
-  }])
+  container_definitions = jsonencode([
+    {
+      name  = "nginx"
+      image = var.ecr_image
+
+      portMappings = [
+        {
+          containerPort = 80
+        }
+      ]
+
+      secrets = [
+        {
+          name      = "DB_SECRET"
+          valueFrom = var.secret_arn
+        }
+      ]
+    }
+  ])
 }
 
 resource "aws_ecs_service" "this" {
+  name            = "nginx-service"   # ✅ THIS WAS MISSING
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = 2
