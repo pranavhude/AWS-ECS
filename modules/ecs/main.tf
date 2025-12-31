@@ -3,10 +3,15 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_launch_template" "ecs" {
-  image_id      = "ami-0a8e758f5e873d1c1"
+  name_prefix   = "ecs-ec2-"
+  image_id      = "ami-0a8e758f5e873d1c1"  # ECS-Optimized AL2 (eu-west-1)
   instance_type = "t3.micro"
 
-  user_data = base64encode("echo ECS_CLUSTER=ecs-prod-cluster >> /etc/ecs/ecs.config")
+  user_data = base64encode(<<EOF
+#!/bin/bash
+echo ECS_CLUSTER=ecs-prod-cluster >> /etc/ecs/ecs.config
+EOF
+)
 
   iam_instance_profile {
     name = var.instance_profile
