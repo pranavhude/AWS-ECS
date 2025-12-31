@@ -1,10 +1,14 @@
+data "aws_ssm_parameter" "ecs_ami" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+}
+
 resource "aws_ecs_cluster" "this" {
   name = "ecs-prod-cluster"
 }
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-ec2-"
-  image_id      = "ami-0ec7ce8c931179a8a"  # ECS-Optimized AL2 (eu-west-1)
+  image_id = data.aws_ssm_parameter.ecs_ami.value
   instance_type = "t3.micro"
 
   user_data = base64encode(<<EOF
