@@ -10,6 +10,8 @@ resource "aws_launch_template" "ecs" {
   user_data = base64encode(<<EOF
 #!/bin/bash
 echo ECS_CLUSTER=ecs-prod-cluster >> /etc/ecs/ecs.config
+systemctl enable ecs
+systemctl start ecs
 EOF
 )
 
