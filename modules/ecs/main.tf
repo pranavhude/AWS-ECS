@@ -4,7 +4,7 @@ resource "aws_ecs_cluster" "this" {
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-ec2-"
-  image_id      = "ami-0a8e758f5e873d1c1"  # ECS-Optimized AL2 (eu-west-1)
+  image_id      = "ami-0ec7ce8c931179a8a"  # ECS-Optimized AL2 (eu-west-1)
   instance_type = "t3.micro"
 
   user_data = base64encode(<<EOF
