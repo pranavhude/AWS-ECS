@@ -31,12 +31,16 @@ resource "aws_autoscaling_group" "ecs" {
 resource "aws_ecs_task_definition" "this" {
   family                   = "nginx-task"
   requires_compatibilities = ["EC2"]
+  network_mode             = "bridge"
   execution_role_arn       = var.task_execution_role
 
   container_definitions = jsonencode([
     {
       name  = "nginx"
       image = var.ecr_image
+
+      cpu    = 128
+      memoryReservation = 256   
 
       portMappings = [
         {
