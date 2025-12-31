@@ -1,45 +1,61 @@
+# IAM role for ECS EC2 instances
 resource "aws_iam_role" "ecs_instance_role" {
   name = "ecs-instance-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "ec2.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_instance" {
+# Attach required ECS policy
+resource "aws_iam_role_policy_attachment" "ecs_instance_policy" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
-resource "aws_iam_instance_profile" "ecs" {
+# CREATE INSTANCE PROFILE (THIS WAS MISSING)
+resource "aws_iam_instance_profile" "ecs_instance_profile" {
+  name = "ecs-instance-role"
   role = aws_iam_role.ecs_instance_role.name
 }
 
-resource "aws_iam_role" "task_execution" {
+# ECS Task Execution Role
+resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Principal = { Service = "ecs-tasks.amazonaws.com" }
-      Action = "sts:AssumeRole"
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "ecs-tasks.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "task_execution" {
-  role       = aws_iam_role.task_execution.name
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# OUTPUTS
 output "instance_profile" {
-  value = aws_iam_instance_profile.ecs.name
+  value = aws_iam_instance_profile.ecs_instance_profile.name
 }
 
 output "task_execution_role" {
-  value = aws_iam_role.task_execution.arn
+  value = aws_iam_role.ecs_task_execution_role.arn
 }
