@@ -1,14 +1,26 @@
+############################################
+# ECS OPTIMIZED AMI (SSM)
+############################################
+
 data "aws_ssm_parameter" "ecs_ami" {
   name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
 }
+
+############################################
+# ECS CLUSTER
+############################################
 
 resource "aws_ecs_cluster" "this" {
   name = "ecs-prod-cluster"
 }
 
+############################################
+# ECS EC2 LAUNCH TEMPLATE
+############################################
+
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-ec2-"
-  image_id = data.aws_ssm_parameter.ecs_ami.value
+  image_id      = data.aws_ssm_parameter.ecs_ami.value
   instance_type = "t3.micro"
 
   user_data = base64encode(<<EOF
@@ -26,6 +38,10 @@ EOF
   vpc_security_group_ids = [var.ecs_sg]
 }
 
+############################################
+# ECS AUTO SCALING GROUP
+############################################
+
 resource "aws_autoscaling_group" "ecs" {
   min_size         = 1
   max_size         = 3
@@ -37,7 +53,17 @@ resource "aws_autoscaling_group" "ecs" {
     id      = aws_launch_template.ecs.id
     version = "$Latest"
   }
+
+  tag {
+    key                 = "Name"
+    value               = "ecs-ec2-instance"
+    propagate_at_launch = true
+  }
 }
+
+############################################
+# ECS TASK DEFINITION (EC2 MODE)
+############################################
 
 resource "aws_ecs_task_definition" "this" {
   family                   = "nginx-task"
@@ -50,8 +76,8 @@ resource "aws_ecs_task_definition" "this" {
       name  = "nginx"
       image = var.ecr_image
 
-      cpu    = 128
-      memoryReservation = 256   
+      cpu               = 128
+      memoryReservation = 256
 
       portMappings = [
         {
@@ -69,11 +95,22 @@ resource "aws_ecs_task_definition" "this" {
   ])
 }
 
+############################################
+# ECS SERVICE (ALB INTEGRATION)
+############################################
+
 resource "aws_ecs_service" "this" {
-  name            = "nginx-service"   # ✅ THIS WAS MISSING
+  name            = "nginx-service"
   cluster         = aws_ecs_cluster.this.id
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = 2
+
+  # 🔴 CRITICAL FIXES
+  depends_on = [
+    aws_autoscaling_group.ecs
+  ]
+
+  health_check_grace_period_seconds = 120
 
   load_balancer {
     target_group_arn = var.target_group_arn
