@@ -7,5 +7,5 @@ private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
 
 azs = ["eu-west-1a", "eu-west-1b"]
 
-my_ip   = "192.168.0.100/24"
+my_ip   = "192.168.0.100/32"
 key_name = "ecs-key"
