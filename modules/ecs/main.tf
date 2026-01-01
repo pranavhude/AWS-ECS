@@ -1,12 +1,4 @@
 ############################################
-# ECS OPTIMIZED AMI (SSM)
-############################################
-
-data "aws_ssm_parameter" "ecs_ami" {
-  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
-}
-
-############################################
 # ECS CLUSTER
 ############################################
 
@@ -20,7 +12,7 @@ resource "aws_ecs_cluster" "this" {
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-ec2-"
-  image_id      = data.aws_ssm_parameter.ecs_ami.value
+  image_id      = "ami-05a56a11770eda56a"
   instance_type = "t3.micro"
 
   user_data = base64encode(<<EOF
