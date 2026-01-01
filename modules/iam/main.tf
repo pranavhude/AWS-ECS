@@ -19,13 +19,13 @@ resource "aws_iam_role" "ecs_instance_role" {
   })
 }
 
-# Attach required ECS policy to EC2
+# Required policy for ECS EC2 instances
 resource "aws_iam_role_policy_attachment" "ecs_instance_policy" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
-# FIXED instance profile name (CRITICAL)
+# IMPORTANT: Fixed instance profile name
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
   name = "ecs-instance-role"
   role = aws_iam_role.ecs_instance_role.name
@@ -58,7 +58,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
 }
 
 ############################################
-# OUTPUTS (USED BY ECS MODULE)
+# OUTPUTS
 ############################################
 
 output "instance_profile" {

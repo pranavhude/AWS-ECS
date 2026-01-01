@@ -1,4 +1,12 @@
 ############################################
+# ECS OPTIMIZED AMI (FROM SSM)
+############################################
+
+data "aws_ssm_parameter" "ecs_ami" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id"
+}
+
+############################################
 # ECS CLUSTER
 ############################################
 
@@ -12,7 +20,7 @@ resource "aws_ecs_cluster" "this" {
 
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-ec2-"
-  image_id      = "ami-05a56a11770eda56a"
+  image_id      = data.aws_ssm_parameter.ecs_ami.value
   instance_type = "t3.micro"
 
   user_data = base64encode(<<EOF
@@ -40,6 +48,7 @@ resource "aws_autoscaling_group" "ecs" {
   desired_capacity = 2
 
   vpc_zone_identifier = var.private_subnets
+  health_check_type   = "EC2"
 
   launch_template {
     id      = aws_launch_template.ecs.id
@@ -97,7 +106,6 @@ resource "aws_ecs_service" "this" {
   task_definition = aws_ecs_task_definition.this.arn
   desired_count   = 2
 
-  # 🔴 CRITICAL FIXES
   depends_on = [
     aws_autoscaling_group.ecs
   ]
