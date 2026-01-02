@@ -1,5 +1,5 @@
 resource "aws_secretsmanager_secret" "this" {
-  name = "db-credentials-prod"
+  name = "db-credentials-prod1"
 }
 
 resource "aws_secretsmanager_secret_version" "this" {
