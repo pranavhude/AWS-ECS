@@ -93,3 +93,13 @@ module "bastion" {
 module "monitoring" {
   source = "./modules/monitoring"
 }
+
+###########################################
+# ecr 
+###########################################
+module "ecr" {
+  source = "./modules/ecr"
+
+  repo_name = "ecs-app-repo"
+}
+
