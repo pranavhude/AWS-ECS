@@ -45,6 +45,8 @@ module "iam" {
 
 module "secrets" {
   source = "./modules/secrets-manager"
+  db_user = var.db_user
+  db_pass = var.db_pass
 }
 
 ############################################
