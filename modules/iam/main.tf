@@ -3,31 +3,35 @@
 ############################################
 
 resource "aws_iam_role" "ecs_instance_role" {
-  name = "ecs-instance-role"
+  name = "ecs-ec2-instance-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.amazonaws.com"
       }
-    ]
+      Action = "sts:AssumeRole"
+    }]
   })
 }
 
-# Required policy for ECS EC2 instances
-resource "aws_iam_role_policy_attachment" "ecs_instance_policy" {
+# ECS agent + EC2 container instance permissions
+resource "aws_iam_role_policy_attachment" "ecs_instance_ecs" {
   role       = aws_iam_role.ecs_instance_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
 }
 
-# IMPORTANT: Fixed instance profile name
+# SSM access (mandatory if using SSM)
+resource "aws_iam_role_policy_attachment" "ecs_instance_ssm" {
+  role       = aws_iam_role.ecs_instance_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Instance profile
 resource "aws_iam_instance_profile" "ecs_instance_profile" {
-  name = "ecs-instance-role"
+  name = "ecs-ec2-instance-profile"
   role = aws_iam_role.ecs_instance_role.name
 }
 
@@ -36,19 +40,17 @@ resource "aws_iam_instance_profile" "ecs_instance_profile" {
 ############################################
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "ecsTaskExecutionRole"
+  name = "ecs-task-execution-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-        Action = "sts:AssumeRole"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
       }
-    ]
+      Action = "sts:AssumeRole"
+    }]
   })
 }
 
@@ -58,13 +60,36 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
 }
 
 ############################################
-# OUTPUTS
+# ECS TASK ROLE (Application permissions)
 ############################################
 
-output "instance_profile" {
-  value = aws_iam_instance_profile.ecs_instance_profile.name
+resource "aws_iam_role" "ecs_task_role" {
+  name = "ecs-task-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Service = "ecs-tasks.amazonaws.com"
+      }
+      Action = "sts:AssumeRole"
+    }]
+  })
 }
 
-output "task_execution_role" {
-  value = aws_iam_role.ecs_task_execution_role.arn
+# Secrets Manager access (example – tighten in real prod)
+resource "aws_iam_role_policy" "ecs_task_secrets_policy" {
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "secretsmanager:GetSecretValue"
+      ]
+      Resource = "*"
+    }]
+  })
 }
