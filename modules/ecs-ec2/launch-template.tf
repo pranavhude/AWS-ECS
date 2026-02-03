@@ -22,7 +22,7 @@ resource "aws_launch_template" "this" {
   vpc_security_group_ids = [var.ecs_sg_id]
 
   user_data = base64encode(
-    templatefile("${path.module}/user_data.sh", {
+    templatefile("${path.module}/user-data.sh", {
       cluster_name = var.cluster_name
     })
   )
