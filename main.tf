@@ -84,7 +84,7 @@ module "ecs_service" {
   secret_arn                  = module.secrets.secret_arn
   ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
   ecs_task_role_arn           = module.iam.ecs_task_role_arn
-  region                      = var.region
+  region                      = var.aws_region
 }
 
 ############################################
