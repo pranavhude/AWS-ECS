@@ -1,7 +1,6 @@
 ############################################
 # VPC
 ############################################
-
 module "vpc" {
   source          = "./modules/vpc"
   vpc_cidr        = var.vpc_cidr
@@ -13,7 +12,6 @@ module "vpc" {
 ############################################
 # SECURITY GROUPS
 ############################################
-
 module "sg" {
   source = "./modules/security-groups"
   vpc_id = module.vpc.vpc_id
@@ -23,7 +21,6 @@ module "sg" {
 ############################################
 # ALB
 ############################################
-
 module "alb" {
   source         = "./modules/alb"
   vpc_id         = module.vpc.vpc_id
@@ -32,9 +29,16 @@ module "alb" {
 }
 
 ############################################
+# ECR
+############################################
+module "ecr" {
+  source    = "./modules/ecr"
+  repo_name = "ecs-app-repo"
+}
+
+############################################
 # IAM (ALL IAM LIVES HERE)
 ############################################
-
 module "iam" {
   source = "./modules/iam"
 }
@@ -42,33 +46,50 @@ module "iam" {
 ############################################
 # SECRETS MANAGER
 ############################################
-
 module "secrets" {
-  source = "./modules/secrets-manager"
+  source  = "./modules/secrets-manager"
   db_user = var.db_user
   db_pass = var.db_pass
 }
 
 ############################################
-# ECS
+# ECS CLUSTER (CONTROL PLANE)
 ############################################
-
-module "ecs" {
-  source = "./modules/ecs"
-
-  private_subnets     = module.vpc.private_subnets
-  ecs_sg              = module.sg.ecs_sg
-  target_group_arn    = module.alb.target_group_arn
-  ecr_image           = module.ecr.repo_url
-  task_execution_role = module.iam.task_execution_role
-  instance_profile    = module.iam.instance_profile
-  secret_arn          = module.secrets.secret_arn
+module "ecs_cluster" {
+  source       = "./modules/ecs-cluster"
+  cluster_name = "prod-ecs-cluster"
 }
 
 ############################################
-# RDS
+# ECS EC2 (CAPACITY PROVIDER)
 ############################################
+module "ecs_ec2" {
+  source = "./modules/ecs-ec2"
 
+  cluster_name          = module.ecs_cluster.name
+  private_subnets       = module.vpc.private_subnets
+  ecs_sg_id             = module.sg.ecs_sg
+  instance_profile_name = module.iam.ecs_instance_profile_name
+}
+
+############################################
+# ECS SERVICE (TASK + SERVICE)
+############################################
+module "ecs_service" {
+  source = "./modules/ecs-service"
+
+  cluster_id                  = module.ecs_cluster.id
+  ecr_image                   = module.ecr.repo_url
+  target_group_arn            = module.alb.target_group_arn
+  secret_arn                  = module.secrets.secret_arn
+  ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
+  ecs_task_role_arn           = module.iam.ecs_task_role_arn
+  region                      = var.region
+}
+
+############################################
+# RDS (PRIVATE)
+############################################
 module "rds" {
   source          = "./modules/rds"
   private_subnets = module.vpc.private_subnets
@@ -76,9 +97,8 @@ module "rds" {
 }
 
 ############################################
-# BASTION
+# BASTION HOST
 ############################################
-
 module "bastion" {
   source        = "./modules/bastion"
   public_subnet = module.vpc.public_subnets[0]
@@ -89,17 +109,6 @@ module "bastion" {
 ############################################
 # MONITORING
 ############################################
-
 module "monitoring" {
   source = "./modules/monitoring"
 }
-
-###########################################
-# ecr 
-###########################################
-module "ecr" {
-  source = "./modules/ecr"
-
-  repo_name = "ecs-app-repo"
-}
-
