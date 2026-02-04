@@ -1,4 +1,4 @@
-name: Terraform CI/CD - Infra
+name: Terraform CI/CD - infra
 
 #on:
   #push:
@@ -18,11 +18,11 @@ on:
     branches:
       - main
     paths:
-      - "Infra/**"
+      - "infra/**"
 
 jobs:
   terraform:
-    name: Terraform Infra Pipeline
+    name: Terraform infra Pipeline
     runs-on: ubuntu-latest
 
     defaults:
