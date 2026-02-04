@@ -1,17 +1,17 @@
 name: Terraform CI/CD - infra
 
-#on:
-  #push:
-    #branches:
-     # - main
-   # paths:
-    #  - "infra/**"
-
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - "infra/**"
+
+#on:
+ # workflow_dispatch:
+  #push:
+   # branches:
+    #  - main
 
 
   pull_request:
