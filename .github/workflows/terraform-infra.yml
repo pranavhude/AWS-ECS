@@ -11,7 +11,7 @@ on:
     branches:
       - main
     paths:
-      - "infra/**"
+      - "Infra/**"
 
 jobs:
   terraform:
