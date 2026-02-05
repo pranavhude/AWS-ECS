@@ -15,4 +15,8 @@ resource "aws_ecs_service" "this" {
 
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
+
+  depends_on = [
+    var.alb_listener_arn
+  ]
 }

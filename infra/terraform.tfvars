@@ -13,3 +13,4 @@ key_name = "ecs-key"
 db_user = "admin"
 db_pass = "MyPassword123"
 
+container_image = "pranavhude/ecs-devops-test:latest"

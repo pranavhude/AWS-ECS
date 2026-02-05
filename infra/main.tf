@@ -80,6 +80,7 @@ module "ecs_service" {
 
   cluster_id                  = module.ecs_cluster.id
   ecr_image                   = module.ecr.repo_url
+  alb_listener_arn            = module.alb.listener_arn
   target_group_arn            = module.alb.target_group_arn
   secret_arn                  = module.secrets.secret_arn
   ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
